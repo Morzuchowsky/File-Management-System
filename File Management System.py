@@ -1,111 +1,67 @@
 import os
-import shutil
-import re
 
 
-def delete_files(extension, start_dir):
-    """Delete files with a given extension from a directory and its subdirectories."""
-    print(f"\nAre you sure that you want to delete all files with the file type: {extension.upper()}")
-    print(f"from: {start_dir} and all sub-folders")
-
-    confirmation = input("Y or N? ").upper()
-    while confirmation not in ["Y", "N"]:
-        confirmation = input("Y or N? ").upper()
-
-    if confirmation == 'Y':
-        for current_folder, _, filenames in os.walk(start_dir, topdown=False):
-            for filename in filenames:
-                if extension == "*" or filename.endswith('.' + extension):
-                    os.remove(os.path.join(current_folder, filename))
-            if current_folder != start_dir:
-                try:
-                    os.rmdir(current_folder)
-                except:
-                    pass
-
-        print("\nFile and Sub-Folder Deletion Completed")
-    else:
-        print("\nFile and Sub-Folder Deletion Canceled")
+# Create a new directory.
+def create_directory(directory_name):
+    try:
+        os.mkdir(directory_name)
+        print(f"Directory '{directory_name}' created successfully!")
+    except FileExistsError:
+        print(f"Directory '{directory_name}' already exists.")
+    except Exception as e:
+        print(f"Error creating directory '{directory_name}': {e}")
 
 
-def copy_files(extension, start_dir, end_dir):
-    """Copy files with a given extension from a directory and its subdirectories to another directory."""
-    print(f"\nAre you sure that you want to copy all files with the file type: {extension.upper()}")
-    print(f"from: {start_dir} and all sub-folders to: {end_dir}")
-
-    confirmation = input("Y or N? ").upper()
-    while confirmation not in ["Y", "N"]:
-        confirmation = input("Y or N? ").upper()
-
-    if confirmation == 'Y':
-        for current_folder, _, filenames in os.walk(start_dir, topdown=False):
-            regex = re.compile(re.escape(start_dir) + r"(\\.*)")
-            subcurrent_folder = re.findall(regex, current_folder)
-            current_end_dir = end_dir + subcurrent_folder[0] if subcurrent_folder else end_dir
-
-            os.makedirs(current_end_dir, exist_ok=True)
-
-            for filename in filenames:
-                if extension == "*" or filename.endswith('.' + extension):
-                    shutil.copy(os.path.join(current_folder, filename), os.path.join(current_end_dir, filename))
-
-        print("\nFile and Sub-Folder Copying Completed")
-    else:
-        print("\nFile and Sub-Folder Copying Canceled")
+# List all files in the current directory.
+def list_files():
+    files = [f for f in os.listdir('.') if os.path.isfile(f)]
+    return files
 
 
-def move_files(extension, start_dir, end_dir):
-    """Move files with a given extension from a directory and its subdirectories to another directory."""
-    print(f"\nAre you sure that you want to move all files with the file type: {extension.upper()}")
-    print(f"from: {start_dir} and all sub-folders to: {end_dir}")
-
-    confirmation = input("Y or N? ").upper()
-    while confirmation not in ["Y", "N"]:
-        confirmation = input("Y or N? ").upper()
-
-    if confirmation == 'Y':
-        for current_folder, _, filenames in os.walk(start_dir, topdown=False):
-            regex = re.compile(re.escape(start_dir) + r"(\\.*)")
-            subcurrent_folder = re.findall(regex, current_folder)
-            current_end_dir = end_dir + subcurrent_folder[0] if subcurrent_folder else end_dir
-
-            os.makedirs(current_end_dir, exist_ok=True)
-
-            for filename in filenames:
-                if extension == "*" or filename.endswith('.' + extension):
-                    shutil.move(os.path.join(current_folder, filename), os.path.join(current_end_dir, filename))
-            if current_folder != start_dir:
-                try:
-                    os.rmdir(current_folder)
-                except:
-                    pass
-
-        print("\nFile and Sub-Folder Moving Completed")
-    else:
-        print("\nFile and Sub-Folder Moving Canceled")
+# Delete selected files from the directory.
+def delete_files(files_to_delete):
+    for file in files_to_delete:
+        try:
+            os.remove(file)
+            print(f"'{file}' has been deleted successfully!")
+        except OSError as e:
+            print(f"Error: {e.filename} - {e.strerror}.")
 
 
+# Rename a file.
+def rename_file(old_name, new_name):
+    try:
+        os.rename(old_name, new_name)
+        print(f"File renamed from '{old_name}' to '{new_name}' successfully!")
+    except FileNotFoundError:
+        print(f"File '{old_name}' not found.")
+    except Exception as e:
+        print(f"Error renaming file: {e}")
+
+
+# Move files to a new directory.
+def move_files(files_to_move, directory_name):
+    if not os.path.exists(directory_name):
+        print(f"Directory '{directory_name}' does not exist. Creating it now.")
+        create_directory(directory_name)
+
+    for file in files_to_move:
+        try:
+            os.replace(file, os.path.join(directory_name, file))
+            print(f"'{file}' moved to '{directory_name}' successfully!")
+        except Exception as e:
+            print(f"Error moving '{file}': {e}")
+
+
+# Main function to execute the script.
 def main():
-    action = input("Choose action (Copy, Move or Delete): ").capitalize()
-    extension = input("File Type (\"*\" for all files): ")
-
-    start_dir = input(f"Directory to {action} from: ")
-    while not os.path.exists(start_dir):
-        print("Please check that the directory exists.")
-        start_dir = input(f"Directory to {action} from: ")
-
-    end_dir = ""
-    if action in ['Copy', 'Move']:
-        end_dir = input(f"Directory to {action} to: ")
-
-    if action == 'Delete':
-        delete_files(extension, start_dir)
-    elif action == 'Copy':
-        copy_files(extension, start_dir, end_dir)
-    elif action == 'Move':
-        move_files(extension, start_dir, end_dir)
-    else:
-        print("\nError determining action")
+    # Example usage
+    create_directory("new_directory")
+    files = list_files()
+    print(f"Files in current directory: {files}")
+    delete_files(["sample.txt"])
+    rename_file("old_name.txt", "new_name.txt")
+    move_files(["file1.txt", "file2.txt"], "new_directory")
 
 
 if __name__ == "__main__":
